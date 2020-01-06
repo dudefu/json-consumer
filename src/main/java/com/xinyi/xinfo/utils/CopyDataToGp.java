@@ -66,8 +66,10 @@ public class CopyDataToGp {
      *  1、字段数比第一条数据字段数少时，其他缺失字段数值设置为0
      *  2、字段数比第一条数据字段数多时，先往目标表中新增字段，然后再插入数据（忽略已插入的数据）
      *
+     *  文件写入主要问题：1、字段缺少 2、数据有换行符，有空格 3、有乱码00x0,0x80,0x90 4、字段数据太长
+     *
      */
-    public static String writeFile(List<JSONObject> list,String tableName,Connection conn) throws FileNotFoundException, UnsupportedEncodingException {
+    public static String writeFile(List<JSONObject> list,String tableColumns,String tableName,Connection conn){
         FileWriter out = null;
         String filePath = "./"+UUID.randomUUID();
         //BufferedWriter out = null ;
@@ -76,52 +78,33 @@ public class CopyDataToGp {
 
         try{
             out = new FileWriter(new File(filePath));
-            //out = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (filePath,true),"UTF-8"));
-            List<String> fields = new ArrayList<>() ;
-            for(Map.Entry<String,Object> entry:list.get(1).entrySet()){
-                fields.add(entry.getKey().toLowerCase());
-                lens.add(fieldsLength.get(entry.getKey().toLowerCase()));
-            }
-            if(fieldsList.size() == 0 ){
-                fieldsList = fields ;
-            }else if(fieldsList.size() > fields.size()){
-                fields = fieldsList;
+            String[] fields = tableColumns.split(",") ;
+            for (String field : fields) {
+                lens.add(fieldsLength.get(field.toLowerCase()));
             }
 
             for(int i=0;i<list.size();i++){
                 Object[] objs = list.get(i).values().toArray();
-                if(objs.length != fields.size()){
-                    //判断每条数据字段个数是否一样，不一样做处理，缺少的值设置为0
+                if(objs.length != fields.length){
+                    //判断每条数据长度是否一样，不一样做处理，缺少的值设置为0
                     List<Object> objsTemp = new ArrayList<>();
-                    if(objs.length < fields.size()){
                         for(Object obj : objs){
                             objsTemp.add(obj);
                         }
-                        for (int j = 0; j < fields.size(); j++) {
-                            boolean b = list.get(i).containsKey(fields.get(j));
+                        for (int j = 0; j < fields.length; j++) {
+                            boolean b = list.get(i).containsKey(fields[j]);
                             if(!b){
                                 objsTemp.add(j,0);
                             }
                         }
-                    }
-//                    if(objs.length > fields.size()){
-//                        for (int j = 0; j < objs.length; j++) {
-//                            boolean b = list.get(i).containsKey(fields.get(j));
-//                            if(!b){
-//                                objsTemp.add(j,0);
-//                            }else{
-//                                objsTemp.add(j,objs[j]);
-//                            }
-//                            objsTemp.add(j,objs);
-//                        }
-//                    }
+
 
                     for(int j=0;j<objsTemp.size();j++){
                         int len = objsTemp.get(j).toString().length();
                         if(len> lens.get(j) ){
                             System.out.println(len);
                             System.out.println(lens.get(j));
-                            TableOperate.updateFields(tableName,fields.get(j).toLowerCase(),3000);
+                            TableOperate.updateFields(tableName,fields[j].toLowerCase(),3000);
                             fieldsLength = getFieldsLength(tableName,conn);
                             for(Map.Entry<String,Object> entry:list.get(1).entrySet()){
                                 lens.add(fieldsLength.get(entry.getKey().toLowerCase()));
@@ -147,7 +130,7 @@ public class CopyDataToGp {
                         if(len>lens.get(j)){
                             System.out.println(len);
                             System.out.println(lens.get(j));
-                            TableOperate.updateFields(tableName,fields.get(j).toLowerCase(),3000);
+                            TableOperate.updateFields(tableName,fields[j].toLowerCase(),3000);
                             fieldsLength = getFieldsLength(tableName,conn);
                             for(Map.Entry<String,Object> entry:list.get(1).entrySet()){
                                 lens.add(fieldsLength.get(entry.getKey().toLowerCase()));
@@ -194,7 +177,7 @@ public class CopyDataToGp {
         long result = 0 ;
 
         try{
-            filePath = writeFile(list,tablename,conn);
+            filePath = writeFile(list,tableColumns,tablename,conn);
 
             copyManager = new CopyManager((BaseConnection)conn);
 //            reader = new FileReader(new File("./7a5797e6-cf0c-4071-bd23-22dcd758078e"));
