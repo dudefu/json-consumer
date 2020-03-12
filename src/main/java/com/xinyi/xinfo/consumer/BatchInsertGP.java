@@ -19,6 +19,8 @@ public class BatchInsertGP {
     public static final Logger logger = LoggerFactory.getLogger(BatchInsertGP.class);
     private static PropertiesContainer propertiesContainer = new PropertiesContainer();
     private static final Connection conn = GreenPlumUtils.getConnection();
+    //已插入数据条数
+    private static int allRecords = 0;
 
     static {
         propertiesContainer.addConfigPropertiesFile("application.properties");
@@ -77,7 +79,7 @@ public class BatchInsertGP {
         buildDBConfigAndStartDatasource();
         try {
             //清空数据
-            SQLExecutor.delete("delete from " + targetTableName);
+//            SQLExecutor.delete("delete from " + targetTableName);
 
             //分页插入数据
 //            final int batchSize = Integer.parseInt(propertiesContainer.getProperty("batchSize"));
@@ -163,18 +165,16 @@ public class BatchInsertGP {
      * @param targetTableName
      * @return
      */
-    public static boolean batchInsert(String url, String page, String rows, String appKey, String targetTableName) {
+    public static boolean batchInsert(String url, String page, String rows, String appKey, String targetTableName,Integer totalRows) {
 
         boolean result = true;
-        //已插入数据条数
-        int allRecords = 0;
         Map<Integer, JSONObject> map = new HashMap<>();
 
         //创建数据库连接池
         buildDBConfigAndStartDatasource();
         try {
             //清空数据
-            SQLExecutor.delete("delete from " + targetTableName);
+//            SQLExecutor.delete("delete from " + targetTableName);
 
             logger.info("==> 拉取数据... ...");
             List<JSONObject> datas = JSONConsumerUtils.getJSONDatas(url, page, rows, appKey);
@@ -191,7 +191,7 @@ public class BatchInsertGP {
             Collections.sort(list);
 
             int totalSize = datas.size();
-            logger.info("==> 数据总条数totalSize : " + totalSize);
+            logger.info("==> 单次插入数据总条数totalSize : " + totalSize);
             if (totalSize != 0) {
                 long startTime = System.currentTimeMillis();
                 //获取data字段
@@ -199,7 +199,9 @@ public class BatchInsertGP {
                 logger.info("===>>> tableColumns : " + tableColumns);
                 logger.info("==> 开始往GP数据库插入json数据");
                 long copyDataResult = CopyDataToGp.copyData(targetTableName, tableColumns, datas, conn);
-                logger.info("==> 已插入数据条数 ：" + copyDataResult);
+                allRecords += copyDataResult;
+                logger.info("==> 已插入数据条数 ：" + allRecords);
+                logger.info("==> 剩余数据条数 ：" + (totalRows - allRecords));
 
                 long endTime = System.currentTimeMillis();
                 logger.info("==> 数据插入总耗时：" + (endTime - startTime) / 1000 + "s");
