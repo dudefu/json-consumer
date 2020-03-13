@@ -203,7 +203,7 @@ public class BatchInsertGP {
                 logger.info("==> 剩余数据条数 ：" + (totalRows - allRecords));
 
                 long endTime = System.currentTimeMillis();
-                logger.info("==> 数据插入总耗时：" + (endTime - startTime) / 1000 + "s");
+                logger.info("==> 数据插入耗时：" + (endTime - startTime) / 1000 + "s");
             } else {
                 result = false;
                 logger.warn("数据获取为空！");

@@ -186,7 +186,7 @@ public class CopyDataToGp {
             long oneStartTime = System.currentTimeMillis();
             long copyResult = copyManager.copyIn("copy "+tablename+" ("+tableColumns+") from stdin delimiter as '^' NULL as 'null'",reader);
             long oneEndTime = System.currentTimeMillis();
-            logger.info("===>> 单次插入costTime = "+(oneEndTime-oneStartTime)/1000+" s");
+            logger.info("===>> 单次copy插入costTime = "+(oneEndTime-oneStartTime)/1000+" s");
             result = copyResult ;
         }catch(Exception ex){
             ex.printStackTrace();
