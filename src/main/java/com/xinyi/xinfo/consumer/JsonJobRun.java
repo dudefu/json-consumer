@@ -1,4 +1,4 @@
-package com.xinyi.xinfo.runner;
+package com.xinyi.xinfo.consumer;
 
 import com.xinyi.xinfo.utils.DateUtil;
 import com.xinyi.xinfo.utils.SyncJsonHandler;
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -32,15 +33,17 @@ public class JsonJobRun {
         propertiesContainer.addConfigPropertiesFile("application.properties");
     }
 
-    public void JsonJobRunTest(String url, String totalRows, String appKey, String targetTableName ){
+    public void JsonJobRunTest(String url, String totalRows, String appKey, String targetTableName ) throws SQLException {
         //入库开始时间
         Long inserOrUpdateBegin = System.currentTimeMillis();
         LOG.info("数据更新开始时间:"+ DateUtil.formatDateTime(new Date()));
+
         //接收集合各段的 执行的返回结果
         List<Future<String>> futureList = new ArrayList<Future<String>>();
         Integer totalPage = 1;
         Integer batchSize = Integer.valueOf(propertiesContainer.getProperty("batchSize"));
         Integer totalSize = Integer.valueOf(totalRows);
+        Integer totalDataRows = Integer.valueOf(totalRows);
 
         //集合总条数
         if(totalRows != null){
@@ -56,9 +59,9 @@ public class JsonJobRun {
                     if(totalSize >= batchSize ){
                         totalSize -= batchSize ;
                         //每段数据集合并行入库
-                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",batchSize+"",appKey,targetTableName,totalSize));
+                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",batchSize+"",appKey,targetTableName,totalDataRows));
                     }else{
-                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",totalSize+"",appKey,targetTableName,totalSize));
+                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",totalSize+"",appKey,targetTableName,totalDataRows));
                     }
                 }
             }else{
@@ -66,9 +69,9 @@ public class JsonJobRun {
                     if(totalSize >= batchSize ){
                         totalSize -= batchSize ;
                         //每段数据集合并行入库
-                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",batchSize+"",appKey,targetTableName,totalSize));
+                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",batchSize+"",appKey,targetTableName,totalDataRows));
                     }else{
-                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",totalSize+"",appKey,targetTableName,totalSize));
+                        futureList.add(syncJsonHandler.syncMargePsr(url,i+"",totalSize+"",appKey,targetTableName,totalDataRows));
                     }
                 }
             }
@@ -91,7 +94,7 @@ public class JsonJobRun {
             }
         }
         Long inserOrUpdateEnd = System.currentTimeMillis();
-        LOG.info("数据更新结束时间:"+inserOrUpdateEnd+"。此次更新数据花费时间为："+(inserOrUpdateEnd-inserOrUpdateBegin));
+        LOG.info("数据更新结束时间:"+DateUtil.formatDateTime(new Date())+"。此次更新数据花费时间为："+((inserOrUpdateEnd-inserOrUpdateBegin)/1000)+" s");
 
     }
 

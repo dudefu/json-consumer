@@ -26,34 +26,34 @@ public class BatchInsertGP {
         propertiesContainer.addConfigPropertiesFile("application.properties");
     }
 
-    protected static void buildDBConfigAndStartDatasource() {
-
-        String dbName = propertiesContainer.getProperty("db.name");
-        String dbUser = propertiesContainer.getProperty("db.user");
-        String dbPassword = propertiesContainer.getProperty("db.password");
-        String dbDriver = propertiesContainer.getProperty("db.driver");
-        String dbUrl = propertiesContainer.getProperty("db.url");
-
-
-        String validateSQL = propertiesContainer.getProperty("db.validateSQL");
-
-
-        String _jdbcFetchSize = propertiesContainer.getProperty("db.jdbcFetchSize");
-        Integer jdbcFetchSize = null;
-        if (_jdbcFetchSize != null && !_jdbcFetchSize.equals(""))
-            jdbcFetchSize = Integer.parseInt(_jdbcFetchSize);
-
-        //启动数据源
-        SQLUtil.startPool(dbName,//数据源名称
-                dbDriver,//mysql驱动
-                dbUrl,//mysql链接串
-                dbUser, dbPassword,//数据库账号和口令
-                validateSQL, //数据库连接校验sql
-                jdbcFetchSize // jdbcFetchSize
-        );
-
-
-    }
+//    protected static void buildDBConfigAndStartDatasource() {
+//
+//        String dbName = propertiesContainer.getProperty("db.name");
+//        String dbUser = propertiesContainer.getProperty("db.user");
+//        String dbPassword = propertiesContainer.getProperty("db.password");
+//        String dbDriver = propertiesContainer.getProperty("db.driver");
+//        String dbUrl = propertiesContainer.getProperty("db.url");
+//
+//
+//        String validateSQL = propertiesContainer.getProperty("db.validateSQL");
+//
+//
+//        String _jdbcFetchSize = propertiesContainer.getProperty("db.jdbcFetchSize");
+//        Integer jdbcFetchSize = null;
+//        if (_jdbcFetchSize != null && !_jdbcFetchSize.equals(""))
+//            jdbcFetchSize = Integer.parseInt(_jdbcFetchSize);
+//
+//        //启动数据源
+//        SQLUtil.startPool(dbName,//数据源名称
+//                dbDriver,//mysql驱动
+//                dbUrl,//mysql链接串
+//                dbUser, dbPassword,//数据库账号和口令
+//                validateSQL, //数据库连接校验sql
+//                jdbcFetchSize // jdbcFetchSize
+//        );
+//
+//
+//    }
 
     /**
      * 批量插入数据
@@ -70,16 +70,15 @@ public class BatchInsertGP {
 
         int batchSize = Integer.valueOf(batchsize);
         boolean result = true;
-        //已插入数据条数
-        int allRecords = 0;
+
         Map<Integer, JSONObject> map = new HashMap<>();
 
 
-        //创建数据库连接池
-        buildDBConfigAndStartDatasource();
+//        //创建数据库连接池
+//        buildDBConfigAndStartDatasource();
         try {
             //清空数据
-//            SQLExecutor.delete("delete from " + targetTableName);
+            SQLExecutor.delete("delete from " + targetTableName);
 
             //分页插入数据
 //            final int batchSize = Integer.parseInt(propertiesContainer.getProperty("batchSize"));
@@ -170,29 +169,29 @@ public class BatchInsertGP {
         boolean result = true;
         Map<Integer, JSONObject> map = new HashMap<>();
 
-        //创建数据库连接池
-        buildDBConfigAndStartDatasource();
+//        //创建数据库连接池
+//        buildDBConfigAndStartDatasource();
         try {
-            //清空数据
-//            SQLExecutor.delete("delete from " + targetTableName);
 
             logger.info("==> 拉取数据... ...");
             List<JSONObject> datas = JSONConsumerUtils.getJSONDatas(url, page, rows, appKey);
 
-            //循环遍历每个jsonobject，得到长度的map集合
-            for (JSONObject jsonObject : datas) {
-                map.put(jsonObject.size(), jsonObject);
-            }
-            List<Integer> list = new ArrayList<>();
-            for (Integer key : map.keySet()) {
-                list.add(key);
-            }
-            //对得到的map集合进行排序
-            Collections.sort(list);
 
             int totalSize = datas.size();
             logger.info("==> 单次插入数据总条数totalSize : " + totalSize);
             if (totalSize != 0) {
+
+                //循环遍历每个jsonobject，得到长度的map集合
+                for (JSONObject jsonObject : datas) {
+                    map.put(jsonObject.size(), jsonObject);
+                }
+                List<Integer> list = new ArrayList<>();
+                for (Integer key : map.keySet()) {
+                    list.add(key);
+                }
+                //对得到的map集合进行排序
+                Collections.sort(list);
+
                 long startTime = System.currentTimeMillis();
                 //获取data字段
                 String tableColumns = FieldsOperate.getFields(map.get(list.get(list.size() - 1)), targetTableName).toLowerCase();
@@ -207,6 +206,7 @@ public class BatchInsertGP {
                 logger.info("==> 数据插入总耗时：" + (endTime - startTime) / 1000 + "s");
             } else {
                 result = false;
+                logger.warn("数据获取为空！");
             }
 
         } catch (Exception e) {

@@ -73,7 +73,7 @@ public class JSONConsumerUtils {
                 logger.info("statusCode ==>> "+response.getStatusLine().getStatusCode());
                 // 判断返回状态是否为200
                 if (response.getStatusLine().getStatusCode() == 200) {
-                    logger.info("ContentLength ==>> "+response.getEntity().getContentLength());
+//                    logger.info("ContentLength ==>> "+response.getEntity().getContentLength());
 
                     long startT = System.currentTimeMillis();
                     resultString = EntityUtils.toString(response.getEntity(), "UTF-8");

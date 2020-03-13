@@ -101,11 +101,11 @@ public class DateUtil {
         }
     }
 
-    private static String parseSystemCurrentTimeMillis(Long SystemCurrentTimeMillis){
+    public static String parseSystemCurrentTimeMillis(Long SystemCurrentTimeMillis){
        return DateFormatUtils.format(SystemCurrentTimeMillis,"yyyy-MM-dd HH:mm:ss");
     }
 
-    private static String parseDateTimeToTimeMillis(String dateTime) throws ParseException {
+    public static String parseDateTimeToTimeMillis(String dateTime) throws ParseException {
         return fdfWithNoBar.format(fdfWithBar.parse(dateTime));
     }
 }
